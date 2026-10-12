@@ -2894,7 +2894,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 		vec3_t fogColor;
 		float  fogDensity;
 
-#if /*defined( COMPAT_KPQ3 ) ||*/ defined( COMPAT_ET ) //hypov8 ok?
+#if defined( COMPAT_KPQ3 ) || defined( COMPAT_ET ) //hypov8 ok?
+		// fog state is always stored (RE_SetFog in tr_fog.cc is compiled for every build);
+		// only the ET backend path consumes it
 		glfog_t     glfogsettings[ NUM_FOGS ];
 		glfogType_t glfogNum;
 #endif
