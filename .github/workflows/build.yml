@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "arena/**"
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux (client, dedicated server, game module)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            libsdl1.2-dev \
+            libopenal-dev \
+            libcurl4-openssl-dev \
+            libvorbis-dev \
+            libogg-dev \
+            libfreetype6-dev \
+            libjpeg-dev \
+            libpng-dev \
+            zlib1g-dev \
+            libgl-dev \
+            libglu1-mesa-dev \
+            libtheora-dev
+
+      - name: Show toolchain
+        run: |
+          gcc --version | head -1
+          make --version | head -1
+
+      - name: Build
+        run: make -j"$(nproc)" BUILD_CLIENT=1 BUILD_SERVER=1 BUILD_GAME_SO=1 BUILD_GAME_QVM=0
+
+      - name: List artifacts
+        run: find build -maxdepth 3 -type f \( -name 'kpq3*' -o -name '*.so' -o -name '*.x86_64' \) -print
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingpinq3-linux-x86_64
+          path: |
+            build/release-linux-x86_64/kingpinq3.x86_64
+            build/release-linux-x86_64/kpq3ded.x86_64
+            build/release-linux-x86_64/basekpq3/*.so
+          if-no-files-found: warn
+          retention-days: 7
