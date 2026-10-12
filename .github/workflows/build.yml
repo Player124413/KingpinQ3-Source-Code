@@ -42,7 +42,21 @@ jobs:
           make --version | head -1
 
       - name: Build
-        run: make -j"$(nproc)" BUILD_CLIENT=1 BUILD_SERVER=1 BUILD_GAME_SO=1 BUILD_GAME_QVM=0
+        shell: bash
+        run: |
+          set -o pipefail
+          make -k -j"$(nproc)" BUILD_CLIENT=1 BUILD_SERVER=1 BUILD_GAME_SO=1 BUILD_GAME_QVM=0 2>&1 | tee build.log
+
+      - name: Report compiler errors as annotations
+        if: failure()
+        shell: bash
+        run: |
+          grep -E "error:|Error [0-9]+|\*\*\*" build.log | head -150 | while IFS= read -r line; do
+            esc=$(printf '%s' "$line" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e 's/\n/%0A/g')
+            echo "::error::${esc}"
+          done
+          echo "Total error lines: $(grep -cE 'error:' build.log || true)"
+          grep -E "error:" build.log | sed -E 's/^(.*)$/\1/' | cut -c1-400 | head -300 >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: List artifacts
         run: find build -maxdepth 3 -type f \( -name 'kpq3*' -o -name '*.so' -o -name '*.x86_64' \) -print
