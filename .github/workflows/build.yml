@@ -77,3 +77,37 @@ jobs:
             build/release-linux-x86_64/basekpq3/*.so
           if-no-files-found: warn
           retention-days: 7
+
+  linux-gcc9:
+    # Issue #1 reported a build failure with gcc 9.3.0; keep that toolchain covered.
+    name: Linux with gcc 9.3 (issue #1)
+    runs-on: ubuntu-22.04
+    container: gcc:9.3.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            libsdl1.2-dev \
+            libopenal-dev \
+            libcurl4-openssl-dev \
+            libvorbis-dev \
+            libogg-dev \
+            libfreetype6-dev \
+            libjpeg-dev \
+            libpng-dev \
+            zlib1g-dev \
+            libgl-dev \
+            libglu1-mesa-dev \
+            libtheora-dev
+
+      - name: Show toolchain
+        run: gcc --version | head -1
+
+      - name: Build
+        shell: bash
+        run: |
+          set -o pipefail
+          make -k -j"$(nproc)" BUILD_CLIENT=1 BUILD_SERVER=1 BUILD_GAME_SO=1 BUILD_GAME_QVM=0 2>&1 | tee build.log

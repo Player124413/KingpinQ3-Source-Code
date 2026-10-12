@@ -2925,9 +2925,26 @@ void CG_ResetWeaponSwitch(centity_t *cent, int weapon)
   cg.weaponSelect = weapon;
 }
 
+/*
+================
+CG_RocketExplosion_Init
+
+Rocket impacts get the same layered effect as grenade explosions
+(fireball sprite + ember splash), scaled up for the bigger blast.
+Issue #4: rocket impacts used to show only a handful of sparks.
+================
+*/
 void CG_RocketExplosion_Init(vec3_t org, vec3_t dir)
 {
-  CG_ExplosionSplash(org, dir, 5);
+  CG_Fireball(trap_R_RegisterShader("sprites/explode1/spr16"),
+              org,        // origin
+              800,        // duration
+              80,         // start size
+              220,        // end size
+              1.0f,       // start alpha
+              1.0f);      // end alpha
+
+  CG_ExplosionSplash(org, dir, 15);
 }
 
 /*
