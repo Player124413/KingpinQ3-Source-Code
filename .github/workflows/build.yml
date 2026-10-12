@@ -88,6 +88,11 @@ jobs:
 
       - name: Install build dependencies
         run: |
+          # gcc:9.3.0 is based on Debian buster, whose mirrors moved to the archive
+          sed -i -e 's|deb.debian.org/debian-security|archive.debian.org/debian-security|g' \
+                 -e 's|deb.debian.org/debian|archive.debian.org/debian|g' \
+                 -e 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list
+          printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99archive
           apt-get update
           apt-get install -y --no-install-recommends \
             libsdl1.2-dev \
