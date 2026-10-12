@@ -1964,13 +1964,13 @@ Q3POBJ += \
 Q3POBJ_SMP += \
   $(B)/clientsmp/sdl_glimp.o
 
-$(B)/kingpinq3$(FULLBINEXT): $(Q3OBJ) $(Q3POBJ) $(LIBSDLMAIN)
+$(B)/kingpinq3$(FULLBINEXT): $(Q3OBJ) $(Q3POBJ) $(LIBSDLMAIN) $(JPEGSLIB)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CCC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
 	-o $@ $(Q3OBJ) $(Q3POBJ) \
 	$(LIBSDLMAIN) $(CLIENT_LIBS) $(LIBS)
 
-$(B)/kingpinq3-smp$(FULLBINEXT): $(Q3OBJ) $(Q3POBJ_SMP) $(LIBSDLMAIN)
+$(B)/kingpinq3-smp$(FULLBINEXT): $(Q3OBJ) $(Q3POBJ_SMP) $(LIBSDLMAIN) $(JPEGSLIB)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3POBJ_SMP) \
