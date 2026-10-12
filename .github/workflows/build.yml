@@ -47,16 +47,22 @@ jobs:
           set -o pipefail
           make -k -j"$(nproc)" BUILD_CLIENT=1 BUILD_SERVER=1 BUILD_GAME_SO=1 BUILD_GAME_QVM=0 2>&1 | tee build.log
 
-      - name: Report compiler errors as annotations
+      - name: Report compiler and linker errors as annotations
         if: failure()
         shell: bash
         run: |
-          grep -E "error:|Error [0-9]+|\*\*\*" build.log | head -150 | while IFS= read -r line; do
-            esc=$(printf '%s' "$line" | sed -e 's/%/%25/g' -e 's/\r/%0D/g' -e 's/\n/%0A/g')
+          # GitHub shows only a handful of annotations per step, so pack the
+          # diagnostics into a few large annotations (newlines become %0A).
+          grep -E "error:|undefined reference|multiple definition|ld returned|Error [0-9]+" build.log \
+            | awk '!seen[$0]++' > diag.txt || true
+          echo "Unique diagnostic lines: $(wc -l < diag.txt)"
+          { echo "\`\`\`"; head -c 60000 diag.txt; echo "\`\`\`"; } >> "$GITHUB_STEP_SUMMARY" || true
+          rm -f chunk_*.txt
+          awk '{ if (length(buf) + length($0) > 3000) { n++; print buf > ("chunk_" n ".txt"); buf = "" } buf = buf $0 "\n" } END { n++; print buf > ("chunk_" n ".txt") }' diag.txt
+          for f in $(ls chunk_*.txt 2>/dev/null | sort -V | head -9); do
+            esc=$(sed -e 's/%/%25/g' -e 's/\r/%0D/g' "$f" | awk '{printf "%s%%0A", $0}')
             echo "::error::${esc}"
           done
-          echo "Total error lines: $(grep -cE 'error:' build.log || true)"
-          grep -E "error:" build.log | sed -E 's/^(.*)$/\1/' | cut -c1-400 | head -300 >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: List artifacts
         run: find build -maxdepth 3 -type f \( -name 'kpq3*' -o -name '*.so' -o -name '*.x86_64' \) -print
